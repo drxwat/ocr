@@ -1,6 +1,8 @@
 import argparse
 import matplotlib.pyplot as plt
 import cv2
+import os
+import ntpath
 from ocr.detector import image_pyramid, sliding_window
 
 pyramid_scale, pyramid_min_width, pyramid_min_height = 0.8, 30, 30
@@ -33,8 +35,20 @@ image = cv2.imread(image_path)
 
 # Processing image
 pyramid_number = 0
-for pyramid_image in image_pyramid(image, min_size=(pyramid_min_width, pyramid_min_height)):
+for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_width, pyramid_min_height)):
+
+    # Creating subdirectories for pyramids
+    pyramid_dir = '{}pyramid_{}/'.format(output_directory, pyramid_number)
+    if not os.path.exists(pyramid_dir):
+        os.makedirs(pyramid_dir)
+
     for x, y, win_image in sliding_window(pyramid_image, step_size=sl_w_step, window_size=(sl_w_width, sl_w_height)):
+
+        pyramid_row_dir = '{}y_{}/'.format(pyramid_dir, y)
+        if not os.path.exists(pyramid_row_dir):
+            os.makedirs(pyramid_row_dir)
+
         prefix = '{}_{}_{}'.format(pyramid_number, x, y)
-        # plt.imsave('{}{}{}'.format(output_directory, prefix, ntpath.basename(image_path)), win_image)
-    pyramid_number += pyramid_number
+        cv2.imwrite('{}{}{}'.format(pyramid_row_dir, prefix, ntpath.basename(image_path)), win_image)
+
+    pyramid_number += 1
