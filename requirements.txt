@@ -4,6 +4,7 @@ decorator==4.0.10
 matplotlib==1.5.3
 networkx==1.11
 numpy==1.11.2
+pandas==0.19.1
 Pillow==3.4.2
 pyparsing==2.1.10
 python-dateutil==2.6.0

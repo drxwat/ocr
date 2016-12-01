@@ -51,4 +51,5 @@ for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid
         prefix = '{}_{}_{}'.format(pyramid_number, x, y)
         cv2.imwrite('{}{}{}'.format(pyramid_row_dir, prefix, ntpath.basename(image_path)), win_image)
 
+    cv2.imwrite('{}{}'.format(pyramid_dir, ntpath.basename(image_path)), pyramid_image)
     pyramid_number += 1
