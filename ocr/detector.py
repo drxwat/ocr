@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 def sliding_window(image, step_size=8, window_size=(15, 15)):
@@ -13,6 +14,30 @@ def sliding_window(image, step_size=8, window_size=(15, 15)):
                 break
 
             yield (x, y, windowed_image)
+
+
+def sliding_window_batch(image, step_size=8, window_size=(15, 15), batch_size=128):
+    """ Sliding window thar returns all windows as numpy array"""
+    w_win_num = np.floor(((image.shape[1] - window_size[0]) / step_size) - 1)
+    h_win_num = np.floor(((image.shape[0] - window_size[1]) / step_size) - 1)
+
+    win_num = w_win_num.astype(int) * h_win_num.astype(int)
+    last_batch_num = win_num % batch_size
+
+    windows = np.zeros((batch_size, window_size[1], window_size[0], image.shape[2]))
+
+    i = 0
+    for x, y, window_image in sliding_window(image, step_size=step_size, window_size=window_size):
+
+        if i == batch_size:
+            yield windows
+            i = 0
+            windows = np.zeros((batch_size, window_image.shape[1], window_image.shape[0], window_image.shape[2]))
+
+        windows[i] = window_image
+        i += 1
+
+    yield windows[:last_batch_num, :, :, :]
 
 
 def image_pyramid(image, scale=0.8, min_size=(30, 30)):
