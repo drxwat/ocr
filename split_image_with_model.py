@@ -5,7 +5,6 @@ from ocr.helper import save_image_batch
 from keras.models import load_model
 import ntpath
 import numpy as np
-import tqdm
 
 pyramid_scale, pyramid_min_width, pyramid_min_height = 0.8, 150, 150
 sl_w_step, sl_w_width, sl_w_height = 5, 30, 30
@@ -47,10 +46,11 @@ batch_size = 128
 for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_width, pyramid_min_height)):
 
     # Getting batches of images from image window algorithm
-    for window_batch in tqdm.tqdm(sliding_window_batch(pyramid_image, sl_w_step, (sl_w_width, sl_w_height), batch_size)):
+    for window_batch in sliding_window_batch(pyramid_image, sl_w_step, (sl_w_width, sl_w_height), batch_size):
         # Getting prediction from keras model
         predictions = model.predict(window_batch.reshape(batch_size, 3, 30, 30)/255)
 
+        # Computing if only we fount an image with more than 50%
         if bool(np.any(predictions[:, 0] >= 0.5)):
             # Getting filtered predictions
             predictions_by_percent = {
@@ -58,29 +58,13 @@ for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid
                 '80': (predictions[:, 0] < 0.9) & (predictions[:, 0] >= 0.8),
                 '70': (predictions[:, 0] < 0.8) & (predictions[:, 0] >= 0.7),
                 '60': (predictions[:, 0] < 0.7) & (predictions[:, 0] >= 0.6),
-                '50': (predictions[:, 0] < 0.6) & (predictions[:, 0] >= 0.5)
+                '50': (predictions[:, 0] < 0.6) & (predictions[:, 0] >= 0.5),
             }
 
-            # Saving relevant images
-            map(lambda predict_percent, predict_name:
-                save_image_batch(window_batch[predict_percent], '{}{}'.format(output_directory, predict_name))
-                if bool(np.any(predict_percent))
-                else None,
-                list(predictions_by_percent.values()), predictions_by_percent.keys())
+            # Saving relevant images by corresponding subdirectories
+            for percentage_bound in predictions_by_percent:
+                if bool(np.any(predictions_by_percent[percentage_bound])) is True:
+                    save_image_batch(window_batch[predictions_by_percent[percentage_bound]],
+                                     '{}{}/'.format(output_directory, percentage_bound))
 
     pyramid_number += 1
-
-    # symbols_image = Image.new('L', (pyramid_image.shape[1], pyramid_image.shape[0]))
-    # pixels = symbols_image.load()  # create the pixel map
-
-    # for x, y, win_image in sliding_window(pyramid_image, step_size=sl_w_step, window_size=(sl_w_width, sl_w_height)):
-    #     input_image = np.expand_dims(win_image.reshape(3, 30, 30), axis=0)
-    #     prediction = model.predict(input_image / 255)
-    #
-    #     if prediction[0][0] > 0.5:
-    #         input_image = np.squeeze(input_image, axis=(0,)).reshape((30, 30, 3))
-    #         cv2.imwrite('{}{}_{}_{}_{}'.format(directory_to_write, pyramid_number, x, y, ntpath.basename(image_path)),
-    #                     input_image)
-
-    # Draw black/white image for current pyramid
-    # pyramid_number += 1
