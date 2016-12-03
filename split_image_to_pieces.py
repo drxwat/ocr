@@ -4,10 +4,9 @@ import os
 import ntpath
 from ocr.detector import image_pyramid, sliding_window
 
-# Standard -pw 150 -ph 150 -sw 30 -sh 30 -s 5
 
-pyramid_scale, pyramid_min_width, pyramid_min_height = 0.8, 30, 30
-sl_w_step, sl_w_width, sl_w_height = 8, 15, 15
+pyramid_scale, pyramid_min_width, pyramid_min_height = 0.8, 150, 150
+sl_w_step, sl_w_width, sl_w_height = 5, 30, 30
 
 ap = argparse.ArgumentParser(description='Splits original image and it rescaled copies with sliding window algorithm.')
 ap.add_argument('image', help='Path to the image')
