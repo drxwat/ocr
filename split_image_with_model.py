@@ -44,10 +44,10 @@ image = cv2.imread(image_path)
 output_directory = '{}{}/'.format(directory_to_write, ntpath.basename(image_path))
 pyramid_number = 0
 batch_size = 2048
-for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_width, pyramid_min_height)):
+for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_height, pyramid_min_width)):
 
     # Getting batches of images from image window algorithm
-    for window_batch in sliding_window_batch(pyramid_image, sl_w_step, (sl_w_width, sl_w_height), batch_size):
+    for window_batch in sliding_window_batch(pyramid_image, sl_w_step, (sl_w_height, sl_w_width), batch_size):
         # Getting prediction from keras model
         predictions = model.predict(window_batch.reshape(batch_size, 3, 30, 30)/255)
 

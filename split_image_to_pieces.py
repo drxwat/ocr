@@ -35,14 +35,14 @@ image = cv2.imread(image_path)
 
 # Processing image
 pyramid_number = 0
-for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_width, pyramid_min_height)):
+for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_height, pyramid_min_width)):
 
     # Creating subdirectories for pyramids
     pyramid_dir = '{}pyramid_{}/'.format(output_directory, pyramid_number)
     if not os.path.exists(pyramid_dir):
         os.makedirs(pyramid_dir)
 
-    for x, y, win_image in sliding_window(pyramid_image, step_size=sl_w_step, window_size=(sl_w_width, sl_w_height)):
+    for x, y, win_image in sliding_window(pyramid_image, step_size=sl_w_step, window_size=(sl_w_height, sl_w_width)):
 
         pyramid_row_dir = '{}y_{}/'.format(pyramid_dir, y)
         if not os.path.exists(pyramid_row_dir):
