@@ -3,6 +3,7 @@ import cv2
 from ocr.detector import image_pyramid, sliding_window_batch
 from ocr.helper import save_image_batch
 from keras.models import load_model
+from datetime import datetime
 import ntpath
 import numpy as np
 
@@ -42,7 +43,7 @@ image = cv2.imread(image_path)
 # Processing image
 output_directory = '{}{}/'.format(directory_to_write, ntpath.basename(image_path))
 pyramid_number = 0
-batch_size = 128
+batch_size = 2048
 for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid_min_width, pyramid_min_height)):
 
     # Getting batches of images from image window algorithm
@@ -51,14 +52,19 @@ for pyramid_image in image_pyramid(image, scale=pyramid_scale, min_size=(pyramid
         predictions = model.predict(window_batch.reshape(batch_size, 3, 30, 30)/255)
 
         # Computing if only we fount an image with more than 50%
-        if bool(np.any(predictions[:, 0] >= 0.5)):
+        if bool(np.any(predictions[:, 0] >= 0.9)):
             # Getting filtered predictions
             predictions_by_percent = {
-                '90': (predictions[:, 0] >= 0.9),
-                '80': (predictions[:, 0] < 0.9) & (predictions[:, 0] >= 0.8),
-                '70': (predictions[:, 0] < 0.8) & (predictions[:, 0] >= 0.7),
-                '60': (predictions[:, 0] < 0.7) & (predictions[:, 0] >= 0.6),
-                '50': (predictions[:, 0] < 0.6) & (predictions[:, 0] >= 0.5),
+                '99': (predictions[:, 0] >= 0.99),
+                '98': (predictions[:, 0] < 0.99) & (predictions[:, 0] >= 0.98),
+                '97': (predictions[:, 0] < 0.98) & (predictions[:, 0] >= 0.97),
+                '96': (predictions[:, 0] < 0.97) & (predictions[:, 0] >= 0.96),
+                '95': (predictions[:, 0] < 0.96) & (predictions[:, 0] >= 0.95),
+                '94': (predictions[:, 0] < 0.95) & (predictions[:, 0] >= 0.94),
+                '93': (predictions[:, 0] < 0.94) & (predictions[:, 0] >= 0.93),
+                '92': (predictions[:, 0] < 0.93) & (predictions[:, 0] >= 0.92),
+                '91': (predictions[:, 0] < 0.92) & (predictions[:, 0] >= 0.91),
+                '90': (predictions[:, 0] < 0.91) & (predictions[:, 0] >= 0.90),
             }
 
             # Saving relevant images by corresponding subdirectories
