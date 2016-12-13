@@ -22,12 +22,15 @@ args = ap.parse_args()
 samples_dir, model_path, save_mode, output_dir = args.samples_dir, args.model, args.s, args.o
 
 # save mod preparations
-positives_dir = '{}/{}{}/'.format(output_dir, 'pos', uuid.uuid4())
-negatives_dir = '{}/{}{}/'.format(output_dir, 'neg', uuid.uuid4())
+uuid = uuid.uuid4()
+positives_dir = '{}/{}{}/'.format(output_dir, 'pos', uuid)
+negatives_dir = '{}/{}{}/'.format(output_dir, 'neg', uuid)
+nf_dir = '{}/{}{}/'.format(output_dir, 'nf', uuid)
 
 if save_mode:
     os.mkdir(positives_dir)
     os.mkdir(negatives_dir)
+    os.mkdir(nf_dir)
 
 # Loading classifier
 classifier = cv2.CascadeClassifier(model_path)
@@ -64,10 +67,12 @@ for file_name in files:
             cv2.destroyAllWindows()
 
         if objects_detected_num == 0:
-            print('Object not detected in {}'.format(file_name))
+            cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
             not_detected += 1
+            print('Not fount any object on {}'.format(file_name))
 
     else:
+        cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
         not_detected += 1
         print('No one candidates for {}'.format(file_name))
 
