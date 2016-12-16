@@ -2,22 +2,29 @@ import numpy as np
 import os
 import argparse
 from PIL import Image
+from tqdm import tqdm
 
-# todo: Move to arguments
 output_file_name = "pixel_data.csv"
 
 ap = argparse.ArgumentParser(description='Processes images from listed directories to csv file. '
                                          'Each directory to separate class.')
+
 ap.add_argument('class_dir', type=str, nargs='+', metavar='CLASS_DIR', help='Path to the directory with class images')
+ap.add_argument('-o', type=str, metavar='OUT_FILE', default=output_file_name,
+                help='Path to output csv file (default: {})'.format(output_file_name))
+
 arguments = vars(ap.parse_args())
-directories = arguments['class_dir']
+
+output_file_name, directories = arguments['o'], arguments['class_dir']
 
 with open(output_file_name, mode='wb') as out_file:
     class_n = 0
     for directory in directories:
         images = os.listdir(directory)
 
-        for image_name in images:
+        print('Preparing class from directory {}'.format(directory))
+
+        for image_name in tqdm(images):
             image_path = '{}{}'.format(directory, image_name)
 
             # reading image
