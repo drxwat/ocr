@@ -25,9 +25,8 @@ for file_name in tqdm(files):
     if new_width is None:
         resize_scale = image.shape[0] / new_height
         new_width = int(image.shape[1] / resize_scale)
-    elif new_height in None:
+    elif new_height is None:
         resize_scale = image.shape[1] / new_width
-        new_height = int(image.shape[0] / resize_scale)
 
     resized_image = cv2.resize(image, (new_width, new_height))
     cv2.imwrite(image_path, resized_image)
