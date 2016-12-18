@@ -3,7 +3,6 @@ import cv2
 from ocr.detector import image_pyramid, sliding_window_batch
 from ocr.helper import save_image_batch
 from keras.models import load_model
-from datetime import datetime
 import ntpath
 import numpy as np
 

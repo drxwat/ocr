@@ -2,24 +2,34 @@ import cv2
 import os
 import argparse
 import uuid
+from keras.models import load_model
+from ocr.detector import is_object
+from ocr.helper import resize_image
+
 
 output_dir = '.'
+classifier = None
+classifier_input_shape = (1, 3, 50, 100)
 
-ap = argparse.ArgumentParser(description='Detects and shows objects using cascade classifier. Can be used to save'
-                                         'positive and negative results. If you press 1-num button then displayed'
+ap = argparse.ArgumentParser(description='Detects and shows objects using cascade classifier (detector) '
+                                         'and optional NN classifier to improve result. Can be used to save '
+                                         'positive and negative results. If you press 1-num button then displayed '
                                          'image will be marked as positive else it will be marked as negative.'
                                          'In save mode image will be saved in positives sub directory of output '
                                          'directory.')
 
 ap.add_argument('samples_dir', help='Path to the images directory')
-ap.add_argument('model', type=str, help='Cascade classifier model')
+ap.add_argument('сс_model', type=str, help='Cascade classifier detector')
 # Save mode optional arguments
+ap.add_argument('-c', type=str, metavar='CLASSIFIER', help='Path to keras classifier NN. '
+                                                           'If detector also gives wrong objects.')
 ap.add_argument('-s', action='store_true')
 ap.add_argument('-o', type=str, default=output_dir, metavar='OUTPUT_DIR',
                 help='Output directory for save mode (default: {})'.format(output_dir))
 
 args = ap.parse_args()
-samples_dir, model_path, save_mode, output_dir = args.samples_dir, args.model, args.s, args.o
+samples_dir, model_path, nn_classifier_path, save_mode, output_dir = \
+    args.samples_dir, args.сс_model, args.c, args.s, args.o
 
 # save mod preparations
 uuid = uuid.uuid4()
@@ -32,16 +42,20 @@ if save_mode:
     os.mkdir(negatives_dir)
     os.mkdir(nf_dir)
 
-# Loading classifier
-classifier = cv2.CascadeClassifier(model_path)
+# Loading detector
+detector = cv2.CascadeClassifier(model_path)
 files = os.listdir(samples_dir)
+
+# Loading additional checker with NN
+if nn_classifier_path is not None:
+    classifier = load_model(nn_classifier_path)
 
 not_detected = 0
 for file_name in files:
     image_path = '{}{}'.format(samples_dir, file_name)
     image = cv2.imread(image_path)
     # getting classifier mention =)
-    rectangles = classifier.detectMultiScale(image, minSize=(10, 10))
+    rectangles = detector.detectMultiScale(image, minSize=(10, 10))
 
     if len(rectangles) > 0:
         objects_detected_num = 0
@@ -52,12 +66,17 @@ for file_name in files:
             width, height = rect[2:4]
 
             detected = image[y: y + height, x: x + width]
-            cv2.imshow('Detected object', detected)
-            key = cv2.waitKey(0)
 
-            if key == 1114033:
-                objects_detected_num += 1
-                is_positive = True
+            # additional check with model
+            resized_detected = resize_image(detected, classifier_input_shape[2], classifier_input_shape[3])
+            if is_object(resized_detected, classifier, classifier_input_shape):
+                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (255, 0, 0), 5)
+                cv2.imshow('Detected object', resize_image(rectangle, 700))
+                key = cv2.waitKey(0)
+
+                if key == 1114033:
+                    objects_detected_num += 1
+                    is_positive = True
 
             # saving images
             if save_mode:

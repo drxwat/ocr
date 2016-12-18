@@ -54,3 +54,12 @@ def image_pyramid(image, scale=0.8, min_size=(30, 30)):
 
         image = cv2.resize(image, scaled_shape)
         yield image
+
+
+def is_object(candidate, model=None, shape=None, boundary=0.5):
+    """Evaluates classification check"""
+    if model is not None:
+        prediction = model.predict(candidate.reshape(shape) if shape is not None else candidate)
+        if prediction[0][0] >= boundary:
+            return True
+    return False
