@@ -50,15 +50,18 @@ files = os.listdir(samples_dir)
 if nn_classifier_path is not None:
     classifier = load_model(nn_classifier_path)
 
+# Initializing metrics
+true_pos, true_neg, false_pos, false_neg = 0, 0, 0, 0
 not_detected = 0
+
 for file_name in files:
     image_path = '{}{}'.format(samples_dir, file_name)
     image = cv2.imread(image_path)
     # getting classifier mention =)
     rectangles = detector.detectMultiScale(image, minSize=(10, 10))
 
+    correct_objects_detected_num = 0
     if len(rectangles) > 0:
-        objects_detected_num = 0
         # displaying each candidate and saving if in save mode
         for rect in rectangles:
             is_positive = False
@@ -70,13 +73,25 @@ for file_name in files:
             # additional check with model
             resized_detected = resize_image(detected, classifier_input_shape[2], classifier_input_shape[3])
             if is_object(resized_detected, classifier, classifier_input_shape):
-                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (255, 0, 0), 5)
-                cv2.imshow('Detected object', resize_image(rectangle, 700))
-                key = cv2.waitKey(0)
+                is_positive = True
+                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 255, 0), 5)
+            else:
+                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 0, 255), 5)
 
+            cv2.imshow('Detected object', resize_image(rectangle, 700))
+            key = cv2.waitKey(0)
+
+            if is_positive:
                 if key == 1114033:
-                    objects_detected_num += 1
-                    is_positive = True
+                    true_pos += 1
+                    correct_objects_detected_num += 1
+                else:
+                    false_pos += 1
+            else:
+                if key == 1114033:
+                    true_neg += 1
+                else:
+                    false_neg += 1
 
             # saving images
             if save_mode:
@@ -85,15 +100,19 @@ for file_name in files:
 
             cv2.destroyAllWindows()
 
-        if objects_detected_num == 0:
-            cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
+    # Negative result processing
+    if correct_objects_detected_num == 0:
+        message = 'No one candidate' if len(rectangles) == 0 else 'Not fount correct object'
+        cv2.imshow(message, resize_image(image, 700))
+        key = cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        if key != 1114032:
             not_detected += 1
-            print('Not fount any object on {}'.format(file_name))
-
-    else:
-        cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
-        not_detected += 1
-        print('No one candidates for {}'.format(file_name))
+        print('{} {}'.format(message, file_name))
+        if save_mode:
+            cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
 
 
 print('Detection result is {}/{}'.format(len(files) - not_detected, len(files)))
+print('TP {} | FP {}'.format(true_pos, false_pos))
+print('TN {} | FN {}'.format(true_neg, false_neg))
