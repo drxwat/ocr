@@ -74,12 +74,13 @@ for file_name in files:
             resized_detected = resize_image(detected, classifier_input_shape[2], classifier_input_shape[3])
             if is_object(resized_detected, classifier, classifier_input_shape):
                 is_positive = True
-                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 255, 0), 5)
+                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 255, 0), 25)
             else:
-                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 0, 255), 5)
+                rectangle = cv2.rectangle(image, (x, y), (x + width, y + height), (0, 0, 255), 25)
 
             cv2.imshow('Detected object', resize_image(rectangle, 700))
             key = cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
             if is_positive:
                 if key == 1114033:
@@ -98,16 +99,15 @@ for file_name in files:
                 object_file_name = '{}_{}_{}'.format(x, y, file_name)
                 cv2.imwrite('{}{}'.format(positives_dir if is_positive else negatives_dir, object_file_name), detected)
 
-            cv2.destroyAllWindows()
-
     # Negative result processing
     if correct_objects_detected_num == 0:
         message = 'No one candidate' if len(rectangles) == 0 else 'Not fount correct object'
-        cv2.imshow(message, resize_image(image, 700))
-        key = cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        if key != 1114032:
-            not_detected += 1
+        # bordered_image = cv2.rectangle(image, (0, 0), (0 + image.shape[1], 0 + image.shape[0]), (0, 0, 255), 15)
+        # cv2.imshow(message, resize_image(bordered_image, 700))
+        # key = cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        # if key != 1114033:
+        #     not_detected += 1
         print('{} {}'.format(message, file_name))
         if save_mode:
             cv2.imwrite('{}{}'.format(nf_dir, file_name), image)
